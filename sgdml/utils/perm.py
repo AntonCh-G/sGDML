@@ -94,6 +94,8 @@ def bipartite_match(R, z, lat_and_inv=None, max_processes=None, callback=None):
     n_train, n_atoms, _ = R.shape
 
     # penalty matrix for mixing atom species
+    print (np.repeat(z[:, None], len(z), axis=1))
+    print (z)
     same_z_cost = np.repeat(z[:, None], len(z), axis=1) - z
     same_z_cost[same_z_cost != 0] = 1
 
