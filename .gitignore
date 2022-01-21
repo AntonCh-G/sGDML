@@ -12,3 +12,4 @@
 /*.egg
 sgdml/_bmark_cache.npz
 *.npz
+build/*
