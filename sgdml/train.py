@@ -470,51 +470,53 @@ class GDMLTrain(object):
             task['e_unit'] = train_dataset['e_unit']
 
         if use_sym:
-            n_train = R_train.shape[0]
-            R_train_sync_mat = R_train
-            if n_train > 1000:
-                R_train_sync_mat = R_train[
-                    np.random.choice(n_train, 1000, replace=False), :, :
-                ]
-                self.log.info(
-                    'Symmetry search has been restricted to a random subset of 1000/{:d} training points for faster convergence.'.format(
-                        n_train
+            if 'perms' in train_dataset:
+                task['perms'] = train_dataset['perms']
+            else:
+                n_train = R_train.shape[0]
+                R_train_sync_mat = R_train
+                if n_train > 1000:
+                    R_train_sync_mat = R_train[
+                        np.random.choice(n_train, 1000, replace=False), :, :
+                    ]
+                    self.log.info(
+                        'Symmetry search has been restricted to a random subset of 1000/{:d} training points for faster convergence.'.format(
+                            n_train
+                        )
                     )
-                )
 
-            # TOOD: PBCs disabled when matching (for now).
-            # task['perms'] = perm.find_perms(
-            #    R_train_sync_mat, train_dataset['z'], lat_and_inv=lat_and_inv, max_processes=self._max_processes,
-            # )
-            task['perms'] = perm.find_perms(
-                R_train_sync_mat,
-                train_dataset['z'],
-                lat_and_inv=None,
-                callback=callback,
-                max_processes=self._max_processes,
-            )
-
-            # NEW
-
-            USE_FRAG_PERMS = False
-
-            if USE_FRAG_PERMS:
-                frag_perms = perm.find_frag_perms(
+                # TODO: PBCs disabled when matching (for now).
+                # task['perms'] = perm.find_perms(
+                #    R_train_sync_mat, train_dataset['z'], lat_and_inv=lat_and_inv, max_processes=self._max_processes,
+                # )
+                task['perms'] = perm.find_perms(
                     R_train_sync_mat,
                     train_dataset['z'],
                     lat_and_inv=None,
+                    callback=callback,
                     max_processes=self._max_processes,
                 )
-                task['perms'] = np.vstack((task['perms'], frag_perms))
-                task['perms'] = np.unique(task['perms'], axis=0)
+                # NEW
 
-                print(
-                    '| Keeping '
-                    + str(task['perms'].shape[0])
-                    + ' unique permutations.'
-                )
+                USE_FRAG_PERMS = False
 
-            # NEW
+                if USE_FRAG_PERMS:
+                    frag_perms = perm.find_frag_perms(
+                        R_train_sync_mat,
+                        train_dataset['z'],
+                        lat_and_inv=None,
+                        max_processes=self._max_processes,
+                    )
+                    task['perms'] = np.vstack((task['perms'], frag_perms))
+                    task['perms'] = np.unique(task['perms'], axis=0)
+
+                    print(
+                        '| Keeping '
+                        + str(task['perms'].shape[0])
+                        + ' unique permutations.'
+                    )
+
+                # NEW
 
         else:
             task['perms'] = np.arange(train_dataset['R'].shape[1])[
@@ -1021,7 +1023,7 @@ class GDMLTrain(object):
             )
             return None
 
-        if corrcoef < 0.95:
+        if corrcoef < 0.9:#!Anton
             self.log.warning(
                 'Inconsistent energy labels detected!\n'
                 + 'The predicted energies for the training data are only weakly correlated with the reference labels (correlation coefficient {:.2f}) which indicates that the issue is most likely NOT just a unit conversion error.\n\n'.format(

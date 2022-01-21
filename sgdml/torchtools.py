@@ -62,14 +62,20 @@ class GDMLTorchPredict(nn.Module):
         model = dict(model)
 
         self._dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self._lat_and_inv = (
-            None
-            if lat_and_inv is None
-            else (
-                torch.tensor(lat_and_inv[0], device=self._dev),
-                torch.tensor(lat_and_inv[1], device=self._dev),
-            )
-        )
+        if 'lattice' in model:
+            self._lat_and_inv = (torch.tensor(model['lattice'], device=self._dev),
+                                torch.tensor( np.linalg.inv(model['lattice']), device=self._dev))
+        else:
+            self._lat_and_inv = (None,)
+
+        # self._lat_and_inv = (
+        #     None
+        #     if lat_and_inv is None
+        #     else (
+        #         torch.tensor(lat_and_inv[0], device=self._dev),
+        #         torch.tensor(lat_and_inv[1], device=self._dev),
+        #     )
+        # )
 
         self._sig = int(model['sig'])
         self._c = float(model['c'])
@@ -189,7 +195,7 @@ class GDMLTorchPredict(nn.Module):
 
             diffs = diffs.reshape(-1, 3)
 
-            c = lat_inv.mm(diffs.t())
+            c = lat_inv.mm(diffs.t().float())
             diffs -= lat.mm(c.round()).t()
 
             diffs = diffs.reshape(diffs_shape)
