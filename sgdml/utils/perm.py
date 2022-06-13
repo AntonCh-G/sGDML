@@ -39,7 +39,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import minimum_spanning_tree
 
 from .. import DONE, NOT_DONE
-from .desc import Desc
+from .desc import Desc, _pbc_diff
 from . import ui
 
 glob = {}
@@ -94,8 +94,6 @@ def bipartite_match(R, z, lat_and_inv=None, max_processes=None, callback=None):
     n_train, n_atoms, _ = R.shape
 
     # penalty matrix for mixing atom species
-    print (np.repeat(z[:, None], len(z), axis=1))
-    print (z)
     same_z_cost = np.repeat(z[:, None], len(z), axis=1) - z
     same_z_cost[same_z_cost != 0] = 1
 
@@ -187,7 +185,7 @@ def bipartite_match(R, z, lat_and_inv=None, max_processes=None, callback=None):
 
         else:
             adj = scipy.spatial.distance.pdist(
-                r, lambda u, v: np.linalg.norm(desc.pbc_diff(u - v, lat_and_inv))
+                r, lambda u, v: np.linalg.norm(_pbc_diff(u - v, lat_and_inv))
             )
 
         w, v = np.linalg.eig(scipy.spatial.distance.squareform(adj))
