@@ -214,8 +214,11 @@ def dataset_md5(dataset):
     keys = ['z', 'R']
     if 'E' in dataset:
         keys.append('E')
+
     keys.append('F')
 
+    if 'perms' in dataset:
+        keys.append('perms')
     # only include new extra keys in fingerprint for 'modern' dataset files
     # 'code_version' was included from 0.4.0.dev1
     # opt_keys = ['lattice', 'e_unit', 'E_min', 'E_max', 'E_mean', 'E_var', 'f_unit', 'F_min', 'F_max', 'F_mean', 'F_var']
